@@ -591,6 +591,20 @@ details.caixa summary{cursor:pointer;font-weight:600;color:var(--navy);padding:.
 .pomo-op b em{font-style:normal;font-weight:600;color:#7a5a12;font-size:.8rem;white-space:nowrap}
 .pomo-op span{display:block;color:var(--muted);font-size:.82rem;margin-top:.15rem;line-height:1.35}
 .nav a .pomo-badge{margin-left:auto;font:700 .72rem/1 system-ui;background:var(--gold);color:#2a1f05;padding:.25rem .45rem;border-radius:999px;font-variant-numeric:tabular-nums}
+
+/* ===== Tela de carregamento pós-login (o rosto surge do ruído enquanto o sistema carrega de verdade) ===== */
+.ld{position:fixed;inset:0;z-index:260;background:radial-gradient(circle at 15% 10%,#1d3f8a 0,transparent 45%),linear-gradient(160deg,var(--navy),#071433);color:#fff;overflow:hidden;opacity:0;animation:ldEntra .45s ease-out forwards;clip-path:inset(0 0 0 0 round 0)}
+.ld.sai{animation:cortinaSobe .95s cubic-bezier(.76,0,.24,1) forwards}
+@keyframes ldEntra{to{opacity:1}}
+.ld-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ld-pe{position:absolute;left:50%;top:var(--ldpe,66%);translate:-50% 0;display:grid;justify-items:center;gap:16px;width:min(88vw,380px)}
+.ld-nome{margin:0;text-align:center;font:700 clamp(1.15rem,3.6vw,1.5rem)/1.15 'Playfair Display',Georgia,serif;letter-spacing:.02em}
+.ld-nome span{display:block;color:var(--gold);font-weight:600;font-size:.72em;letter-spacing:.28em;text-transform:uppercase;margin-top:.35em}
+.ld-st{font-size:.78rem;color:#aeb9d4;min-height:1.1em;letter-spacing:.02em;transition:opacity .25s}
+.ld-bar{display:flex;align-items:center;gap:14px;width:100%;justify-content:center}
+.ld-linha{position:relative;width:min(58vw,190px);height:2px;background:rgba(255,255,255,.16);border-radius:2px;overflow:hidden}
+.ld-linha i{position:absolute;inset:0;background:linear-gradient(90deg,var(--gold),#f0d58a);transform-origin:0 50%;transform:scaleX(0);box-shadow:0 0 12px rgba(201,162,74,.7)}
+.ld-bar b{width:3.4ch;text-align:right;font:600 .72rem/1 system-ui;color:#aeb9d4;font-variant-numeric:tabular-nums}
 /* ===== Animações UX v2 ===== */
 /* Cortina de entrada (revela o sistema depois do login) */
 .cortina{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,var(--navy),#071433);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;clip-path:inset(0 0 0 0 round 0);animation:cortinaSobe .9s cubic-bezier(.76,0,.24,1) .75s forwards;pointer-events:none}
@@ -1071,11 +1085,12 @@ async function oferecerDadosExternos(){
   else localStorage.setItem('cursoFiscal.recusou.'+S.user,'1');
 }
 // Depois do login: carrega os dados (nuvem x este aparelho) e abre o sistema
-async function iniciarSessao(sess, senha){
+async function iniciarSessao(sess, senha, ld){
   gravarSessao(sess); S.user=sess.user.id; S.email=sess.user.email||''; S.tentativa=null; modoLogin=null; S.dek=null; S.chaveCifrada=null;
   const uid=S.user, local=lerLocal(uid);
   let remoto=null, offline=false, bruto=null, avisoPerfil=false;
   try{ bruto=await nuvemLer(); }catch(e){ if(e.rede) offline=true; else throw e; }
+  ld&&ld.passo('Abrindo seus dados com segurança…',42);
   let reenviar=false;
   try{ const k=await prepararChave(uid, bruto, senha); avisoPerfil=k.perdeu; if(k.mudou){ localStorage.setItem(kSujo(uid),'1'); reenviar=true; } }
   catch(e){ if(e&&e.precisaSenha){ gravarSessao(null); S.user=null; modoLogin='entrar'; render(); toast('Por segurança, entre com sua senha para destravar seus dados.','err'); return; } throw e; }
@@ -1087,9 +1102,11 @@ async function iniciarSessao(sess, senha){
   } else if(offline){ S.d=local||novosDados(); setSync('off'); }
   else { S.d=local||novosDados(); salvar(); }              // conta nova na nuvem
   pedirPersistencia();
+  ld&&ld.passo('Carregando o conteúdo do curso…',62);
   if(!offline){ try{ await carregarConteudo(); }catch(e){ lerConteudoLocal(); } } else lerConteudoLocal();
   if(!offline){ await oferecerDadosExternos(); try{ await publicarBlocosAntigos(); }catch(e){ toast('Não consegui publicar os blocos antigos agora. Tento de novo no próximo acesso.','err'); } }
   if(reenviar || localStorage.getItem(kSujo(uid))==='1') agendarEnvio();
+  ld&&ld.passo('Montando o seu painel…',78);
   if(!location.hash || location.hash==='#') location.hash='#/painel'; else render();
   if(avisoPerfil) setTimeout(()=>confirmar({titulo:'Preencha seu perfil de novo', texto:'Seus dados pessoais ficam criptografados com a sua senha. Como a senha foi redefinida por e-mail, eles não puderam ser abertos. Seu progresso no curso está intacto; só complete o perfil outra vez.', ok:'Ir para o perfil', cancelar:'Depois'}).then(ok=>ok&&ir('#/perfil')),400);
 }
@@ -1427,6 +1444,92 @@ document.addEventListener('mouseover',e=>{ const dd=document.getElementById('pom
 document.addEventListener('mouseout',e=>{ const dd=document.getElementById('pomo-dd'); if(dd&&dd.classList.contains('aberto')&&dd.contains(e.target)&&!dd.contains(e.relatedTarget)) dd.classList.remove('aberto'); });
 document.addEventListener('input',e=>{ const i=e.target; if(!i.classList||!i.classList.contains('pomo-in')) return; POMO.campo(i.dataset.k, i.type==='checkbox'?i.checked:i.value); if(i.type!=='checkbox'){ const m=POMO.modelos.find(x=>x.id==='custom'); $('#pomo-dd-nome').textContent=m.nome; $('#pomo-dd-desc').textContent=m.desc; $$('.pomo-op').forEach(o=>o.classList.toggle('sel',o.dataset.id==='custom')); } });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const dd=document.getElementById('pomo-dd'); if(dd) dd.classList.remove('aberto'); } });
+
+/* ---------- CARREGADOR PÓS-LOGIN ----------
+   Mostra o rosto surgindo de um ruído (WebGL) enquanto carrega de verdade: conta, dados, manual, fontes e
+   "aquecimento" das telas. A barra só enche conforme as etapas terminam; ao fechar, tudo já está pronto. */
+const LD_MIN = 2.4;        // tempo mínimo da animação, em segundos
+const LD_SHADER_V='attribute vec2 p; varying vec2 vUv; void main(){ vUv=p*0.5+0.5; gl_Position=vec4(p,0.0,1.0); }';
+const LD_SHADER_F=[
+ 'precision mediump float; varying vec2 vUv; uniform sampler2D uMark; uniform vec2 uBox,uCentro,uDrift; uniform float uReveal,uSoft,uScale,uEdge; uniform vec3 uAccent;',
+ 'float hash(vec2 q){return fract(sin(dot(q,vec2(127.1,311.7)))*43758.5453);}',
+ 'float noise(vec2 q){vec2 i=floor(q);vec2 f=fract(q);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),f.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),f.x),f.y);}',
+ 'void main(){ vec2 uv=(vUv-uCentro)*uBox+0.5; if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0){gl_FragColor=vec4(0.0);return;}',
+ ' vec4 t=texture2D(uMark,vec2(uv.x,1.0-uv.y)); vec3 rgb=t.rgb/max(t.a,0.001);',
+ ' vec2 q=uv*uScale+uDrift; float n=noise(q)*0.62+noise(q*2.3+4.1)*0.28+noise(q*5.1-2.7)*0.1;',
+ ' float r=uReveal*(1.0+2.0*uSoft)-uSoft; float a=smoothstep(n-uSoft,n+uSoft,r);',
+ ' float bordo=(1.0-abs(a*2.0-1.0))*uEdge; vec3 c=mix(rgb,uAccent,clamp(bordo*1.6,0.0,1.0));',
+ ' float o=t.a*clamp(a+bordo*0.5,0.0,1.0); gl_FragColor=vec4(c*o,o); }'
+].join('\n');
+function carregador(){
+  const ld=document.createElement('div'); ld.className='ld'; ld.setAttribute('role','status'); ld.setAttribute('aria-live','polite');
+  ld.innerHTML='<canvas class="ld-c" aria-hidden="true"></canvas><div class="ld-pe"><p class="ld-nome">Curso Fiscal<span>do Narça</span></p><div class="ld-st" id="ld-st">Entrando…</div><div class="ld-bar"><span class="ld-linha"><i></i></span><b>0</b></div></div>';
+  document.body.appendChild(ld);
+  const tela=ld.querySelector('canvas'), barra=ld.querySelector('.ld-linha i'), conta=ld.querySelector('.ld-bar b'), rot=ld.querySelector('#ld-st');
+  const dpr=Math.min(devicePixelRatio||1,2); let W=0,H=0,lato=0;
+  const marca=document.createElement('canvas'); let img=null;
+  try{ const m=/url\(["']?(.*?)["']?\)/.exec(getComputedStyle(document.querySelector('.brand-logo')).backgroundImage); if(m){ img=new Image(); img.src=m[1]; } }catch(e){}
+  const gl=tela.getContext('webgl',{premultipliedAlpha:true,antialias:false}); let U={}, tex=null;
+  if(gl){
+    const sh=(t,src)=>{ const o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); return o; };
+    const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,LD_SHADER_V)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,LD_SHADER_F)); gl.linkProgram(pr); gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    const loc=gl.getAttribLocation(pr,'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    ['uMark','uBox','uCentro','uDrift','uReveal','uSoft','uScale','uEdge','uAccent'].forEach(n=>U[n]=gl.getUniformLocation(pr,n));
+    tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+    [[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]].forEach(([a,b])=>gl.texParameteri(gl.TEXTURE_2D,a,b));
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+    gl.uniform3f(U.uAccent,0.788,0.635,0.29); gl.uniform1f(U.uSoft,.15); gl.uniform1f(U.uScale,7); gl.uniform1f(U.uEdge,.6);
+  }
+  function medir(){
+    W=innerWidth; H=innerHeight; tela.width=Math.round(W*dpr); tela.height=Math.round(H*dpr);
+    lato=Math.min(W*.62,H*.42,300); marca.width=marca.height=Math.round(lato*dpr);
+    const cy=H/2-70; ld.style.setProperty('--ldpe',(cy+lato/2+26)+'px');
+    if(img&&img.complete&&img.naturalWidth){ const g=marca.getContext('2d'); g.clearRect(0,0,marca.width,marca.height); g.drawImage(img,0,0,marca.width,marca.height); }
+    if(gl){ gl.viewport(0,0,tela.width,tela.height); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,marca); gl.uniform2f(U.uCentro,.5,1-cy/H); }
+  }
+  medir(); if(img&&!img.complete) img.onload=medir; addEventListener('resize',medir);
+  // progresso real: cada etapa leva a barra até um alvo; durante a etapa ela avança devagar (sem chegar ao alvo)
+  const t0=performance.now(); let base=0, alvo=0, ts=t0, exibido=0, fechando=false, cancelado=false, pronto=null, tempo=0, ultimo=t0, quadro=0;
+  const real=()=> base+(alvo-base)*(1-Math.exp(-(performance.now()-ts)/1400))*(alvo>=100?1:.92);
+  function passo(texto,novoAlvo){ if(cancelado) return; base=alvo; alvo=novoAlvo; ts=performance.now(); if(texto){ rot.style.opacity=0; setTimeout(()=>{ rot.textContent=texto; rot.style.opacity=1; },120); } }
+  function pintar(agora){
+    if(cancelado) return; const dt=Math.min((agora-ultimo)/1000,.05); ultimo=agora; tempo+=dt;
+    const lim=Math.min(real(), ((agora-t0)/1000/LD_MIN)*100);
+    exibido+= (lim-exibido)*Math.min(1,dt*9);
+    const p=Math.max(0,Math.min(100,exibido)), e=p/100;
+    barra.style.transform=`scaleX(${e})`; conta.textContent=Math.round(p);
+    if(gl){ gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); gl.uniform2f(U.uBox,W/lato,H/lato); gl.uniform2f(U.uDrift,tempo*.2,tempo*.12); gl.uniform1f(U.uReveal,Math.min(1,Math.pow(e,1.5)*1.03)); gl.drawArrays(gl.TRIANGLE_STRIP,0,4); }
+    else { const g=tela.getContext('2d'); g.clearRect(0,0,tela.width,tela.height); g.globalAlpha=e; const s=lato*dpr; g.drawImage(marca,(tela.width-s)/2,(tela.height/2-70*dpr)-s/2,s,s); }
+    if(fechando && p>=99.4){ cancelAnimationFrame(quadro); terminar(); return; }
+    quadro=requestAnimationFrame(pintar);
+  }
+  quadro=requestAnimationFrame(pintar);
+  function limpar(){ removeEventListener('resize',medir); try{ const x=gl&&gl.getExtension('WEBGL_lose_context'); x&&x.loseContext(); }catch(e){} ld.remove(); }
+  function terminar(){
+    rot.style.opacity=1; rot.textContent='Tudo pronto';
+    setTimeout(()=>{ ld.classList.add('sai'); const a=$('#app'); a.classList.remove('revelar'); void a.offsetWidth; a.classList.add('revelar'); setTimeout(()=>{ limpar(); a.classList.remove('revelar'); pronto&&pronto(); },1000); },380);
+  }
+  return {
+    passo,
+    fim(){ return new Promise(res=>{ pronto=res; passo(null,100); base=100; fechando=true; }); },
+    cancelar(){ cancelado=true; cancelAnimationFrame(quadro); ld.style.transition='opacity .25s'; ld.style.opacity=0; setTimeout(limpar,260); }
+  };
+}
+// Depois que a sessão está pronta: baixa o manual, espera as fontes e "aquece" as telas fora da vista
+async function prepararPosLogin(ld){
+  try{
+    if(manualLiberado()){ ld.passo('Abrindo o manual do fiscal…',80); try{ await carregarManual(); }catch(e){} }
+    ld.passo('Carregando fontes…',86); try{ await document.fonts.ready; }catch(e){}
+    ld.passo('Preparando as telas…',97);
+    const C=curso(), st=stats(C), caixa=document.createElement('div');
+    caixa.style.cssText='position:fixed;left:-9999px;top:0;width:1100px;visibility:hidden;pointer-events:none';
+    document.body.appendChild(caixa);
+    const telas=[()=>vPainel(C,st), ()=>vCurso(C,st), ()=>vExercicios(C,st), ()=>vPomodoro(), ()=>manualLiberado()&&MAN.dados?vManual():''];
+    for(const f of telas){ try{ caixa.innerHTML=f(); void caixa.offsetHeight; $$('img',caixa).forEach(i=>{ try{ i.decode&&i.decode().catch(()=>{}); }catch(e){} }); }catch(e){} await new Promise(r=>setTimeout(r,30)); }
+    caixa.remove();
+  }catch(e){}
+}
 function render(){
   if(!S.user){ mostrarLogin(); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
@@ -1514,15 +1617,19 @@ async function enviarLogin(e){
       if(p.length<6) return erro('A senha precisa ter pelo menos 6 caracteres.','#l-pass');
       if(p!==p2) return erro('As duas senhas não são iguais.','#l-pass2');
       const j=await authReq('/signup'+redirQ(),{body:{email,password:p}});
-      if(j.access_token && j.user){ await iniciarSessao(sessaoDe(j), p); cortina(); toast('Conta criada! Bem-vindo(a) ao Curso Fiscal do Narça.','ok'); return; }
+      if(j.access_token && j.user){ const ld=carregador(); ld.passo('Criando sua conta…',14);
+        try{ await iniciarSessao(sessaoDe(j), p, ld); await prepararPosLogin(ld); }catch(e){ ld.cancelar(); throw e; }
+        if(!S.user){ ld.cancelar(); return; } await ld.fim(); toast('Conta criada! Bem-vindo(a) ao Curso Fiscal do Narça.','ok'); return; }
       const u=j.user||j;
       if(Array.isArray(u.identities) && u.identities.length===0) return erro('Este e-mail já tem conta.','#l-email','<br><a href="#" data-action="ir-entrar">Entrar com este e-mail</a>');
       modoLogin='entrar'; mostrarLogin(); $('#l-email').value=email;
       $('#l-msg').innerHTML='<div class="alert alert-ok"><b>Conta criada!</b> Enviamos um e-mail para confirmar o seu endereço. Abra o e-mail, clique no link e depois volte aqui para entrar.</div>'; return;
     }
     if(!p) return erro('Digite sua senha.','#l-pass');
-    const j=await authReq('/token?grant_type=password',{body:{email,password:p}});
-    await iniciarSessao(sessaoDe(j), p); if(S.user) cortina();
+    const ld=carregador(); ld.passo('Entrando na sua conta…',14);
+    try{ const j=await authReq('/token?grant_type=password',{body:{email,password:p}}); await iniciarSessao(sessaoDe(j), p, ld); if(S.user) await prepararPosLogin(ld); }
+    catch(e){ ld.cancelar(); throw e; }
+    if(S.user) await ld.fim(); else ld.cancelar();
   }catch(err){
     const c=String(err&&err.codigo||''), m=String(err&&err.msg||'').toLowerCase();
     if(c==='invalid_credentials'||m.includes('invalid login')) erro(msgErro(err),'#l-pass','<br>Ainda não tem conta? <a href="#" data-action="ir-criar">Criar conta com este e-mail</a> · <a href="#" data-action="esqueci">Esqueci a senha</a>');

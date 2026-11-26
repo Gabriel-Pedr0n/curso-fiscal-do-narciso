@@ -877,10 +877,10 @@ async function prepararChave(uid, remotaRaw, senha){
 /* ---------- 7. MODELO DO CURSO (ordem, liberação, estatísticas) ---------- */
 // Monta a sequência do curso: blocos por data de início, aulas por dia
 function curso(){
-  const blocos = Object.values(S.blocos).slice().sort((a,b)=> (a.bloco.inicio||'').localeCompare(b.bloco.inicio||'') || a.bloco.id.localeCompare(b.bloco.id));
+  const blocos = Object.values(S.blocos).slice().sort((a,b)=> a.bloco.id.localeCompare(b.bloco.id, 'pt-BR', {numeric:true}));
   const aulas=[], listas=[];
   for(const b of blocos){
-    b._aulas = b.aulas.slice().sort((x,y)=>(x.dia-y.dia)||(x.data||'').localeCompare(y.data||''));
+    b._aulas = b.aulas.slice().sort((x,y)=>(x.dia-y.dia)||x.id.localeCompare(y.id,'pt-BR',{numeric:true}));
     for(const a of b._aulas){ a._bloco=b.bloco.id; a._idx=aulas.length; aulas.push(a); }
     for(const l of b.listas){ l._bloco=b.bloco.id; listas.push(l); }
   }
@@ -1086,8 +1086,8 @@ function vPainel(C, st){
   let proxHtml;
   if(!prox) proxHtml=`<div><span class="tag tag-ok">Tudo concluído</span><h3 style="margin-top:.5rem">Parabéns! Você concluiu todo o conteúdo importado.</h3><p class="muted" style="margin:0">${S.admin?'Importe o próximo bloco ou emita seu certificado.':'Aguarde o próximo bloco ou emita seu certificado.'}</p></div><div class="btn-row">${S.admin?'<a class="btn" href="#/importar">Importar bloco</a>':''}<a class="btn btn-gold" href="#/certificado">Ver certificado</a></div>`;
   else if(prox.tipo==='aula'){ const a=prox.item;
-    proxHtml=`<div style="min-width:0"><span class="tag">Próxima aula · Dia ${esc(a.dia)}</span><h3 style="margin:.5rem 0 .2rem">${esc(a.titulo)}</h3>
-      <div class="meta" style="margin-top:0"><span>${esc(a.disciplina)} · ${esc(DISCIPLINAS[a.disciplina].nome)}</span><span>Prevista: <b>${fmtData(a.data)}</b> (${diaSemana(a.data)})</span><span>${esc(a.minutos)} min</span></div></div>
+    proxHtml=`<div style="min-width:0"><span class="tag">Próxima aula · Aula ${esc(a.dia)}</span><h3 style="margin:.5rem 0 .2rem">${esc(a.titulo)}</h3>
+      <div class="meta" style="margin-top:0"><span>${esc(a.disciplina)} · ${esc(DISCIPLINAS[a.disciplina].nome)}</span><span>${esc(a.minutos)} min</span></div></div>
       <a class="btn btn-gold" href="#/aula/${encodeURIComponent(a.id)}">${IC.play.replace('<svg','<svg width="16" height="16"')} Começar aula</a>`;
   } else { const l=prox.item;
     proxHtml=`<div><span class="tag">Lista de exercícios</span><h3 style="margin:.5rem 0 .2rem">${esc(l.titulo)}</h3><div class="meta" style="margin-top:0"><span>${plural(l.questoes.length,'questão','questões')}</span><span>${esc(l.minutos)} min</span></div></div>
@@ -1096,7 +1096,7 @@ function vPainel(C, st){
   html += `<div class="grid grid-2">
     <div class="card"><div class="card-title"><h3>Bloco atual</h3><span class="tag tag-navy">${esc(ba.bloco.id)}</span></div>
       <h2 style="margin-bottom:.2rem">${esc(ba.bloco.titulo)}</h2>
-      <p class="muted" style="margin:0 0 1rem">Período: ${fmtData(ba.bloco.inicio)} a ${fmtData(ba.bloco.fim)}</p>
+      <p class="muted" style="margin:0 0 1rem">${plural(ba.aulas.length,"aula","aulas")} · ${plural(ba.listas.length,"lista","listas")} de exercícios · no seu ritmo</p>
       <div class="bar"><span style="width:${bT?Math.round(bA/bT*100):0}%"></span></div><p class="small muted" style="margin:.4rem 0 0">${bA} de ${bT} atividades concluídas</p></div>
     <div class="card next-card" style="align-content:center">${proxHtml}</div></div>`;
   html += `<div class="stats">
@@ -1120,7 +1120,7 @@ function itemAula(C,a){
   const cls=feita?'done':lib?'open':'locked', st=feita?`<span class="st st-done">${IC.check}</span>`:lib?`<span class="st st-open">${IC.play}</span>`:`<span class="st st-lock">${IC.lock}</span>`;
   const btn = feita?`<a class="btn btn-sm" href="#/aula/${encodeURIComponent(a.id)}">Rever</a>` : lib?`<a class="btn btn-sm btn-gold" href="#/aula/${encodeURIComponent(a.id)}">Começar</a>` : `<span class="tag tag-lock">${IC.lock.replace('<svg','<svg width="12" height="12"')} Bloqueada</span>`;
   return `<div class="item ${cls}">${st}<div class="info"><div class="t">${esc(a.titulo)}</div>
-    <div class="m"><span>Dia ${esc(a.dia)} · ${fmtData(a.data)} (${diaSemana(a.data,true)})</span><span class="tag tag-navy">${esc(a.disciplina)}</span><span>${esc(a.minutos)} min</span>${feita?`<span style="color:var(--ok)">Concluída em ${fmtData(P().aulas[a.id].data)}</span>`:''}</div></div>${btn}</div>`;
+    <div class="m"><span>Aula ${esc(a.dia)}</span><span class="tag tag-navy">${esc(a.disciplina)}</span><span>${esc(a.minutos)} min</span>${feita?`<span style="color:var(--ok)">Concluída em ${fmtData(P().aulas[a.id].data)}</span>`:''}</div></div>${btn}</div>`;
 }
 function itemLista(C,l){
   const feita=listaFeita(l.id), lib=listaLiberada(C,l), mp=melhorPct(l.id);
@@ -1130,13 +1130,13 @@ function itemLista(C,l){
     <div class="m"><span>${plural(l.questoes.length,'questão','questões')}</span><span>${esc(l.minutos)} min</span>${mp!=null?`<span style="color:var(--ok)">Melhor nota: ${Math.round(mp)}%</span>`:''}</div></div>${btn}</div>`;
 }
 function vCurso(C){
-  let h=`<div class="page-head"><h1>Curso</h1><p>Seu curso dividido em blocos. Cada bloco tem 6 dias de estudo (segunda a sábado) e uma lista de exercícios.</p></div>`;
+  let h=`<div class="page-head"><h1>Curso</h1><p>Seu curso dividido em blocos. Estude no seu ritmo: cada bloco tem suas aulas de cerca de 30 minutos e uma lista de exercícios.</p></div>`;
   if(!C.blocos.length) return h+`<div class="card" style="text-align:center"><p class="muted">${S.admin?'Nenhum bloco importado ainda.':'O conteúdo ainda não foi publicado.'}</p>${S.admin?'<a class="btn btn-primary" href="#/importar">Importar conteúdo</a>':''}</div>`;
   h+=`<div class="legend"><span><i class="dot" style="background:var(--ok)"></i>Concluída</span><span><i class="dot" style="background:var(--gold)"></i>Liberada</span><span><i class="dot" style="background:var(--lock)"></i>Bloqueada</span></div>`;
   for(const b of C.blocos){
     const ok=b.aulas.filter(a=>aulaFeita(a.id)).length+b.listas.filter(l=>listaFeita(l.id)).length, tot=b.aulas.length+b.listas.length;
     h+=`<div class="card block-card"><div class="bhead"><div><span class="tag tag-navy">${esc(b.bloco.id)}</span> ${blocoCompleto(b)?'<span class="tag tag-ok">Bloco concluído</span>':''}
-      <h2 style="margin:.4rem 0 .1rem">${esc(b.bloco.titulo)}</h2><div class="muted small">${fmtData(b.bloco.inicio)} a ${fmtData(b.bloco.fim)}</div></div>
+      <h2 style="margin:.4rem 0 .1rem">${esc(b.bloco.titulo)}</h2><div class="muted small">${plural(b.aulas.length,"aula","aulas")} · ${plural(b.listas.length,"lista","listas")}</div></div>
       <div style="min-width:160px"><div class="small muted" style="text-align:right">${ok} de ${tot}</div><div class="bar ${ok===tot?'ok':''}"><span style="width:${tot?Math.round(ok/tot*100):0}%"></span></div></div></div>
       ${b._aulas.map(a=>itemAula(C,a)).join('')}${b.listas.map(l=>itemLista(C,l)).join('')}</div>`;
   }
@@ -1177,11 +1177,11 @@ function vAula(C, st, id){
   const cad = (a.caderno&&a.caderno.length)?`<div class="card notebook"><h3>✍️ Anote no caderno físico</h3><p class="small muted" style="margin-top:-.3rem">Escreva estes pontos à mão e marque quando terminar.</p>
     ${a.caderno.map((t,i)=>{const k=a.id+':'+i, ok=!!p.caderno[k]; return `<label class="check ${ok?'done-line':''}"><input type="checkbox" data-action="caderno" data-k="${esc(k)}" ${ok?'checked':''}><span>${esc(t)}</span></label>`;}).join('')}</div>`:'';
   const ant=C.aulas[a._idx-1], prox=C.aulas[a._idx+1], proxLib = prox && aulaLiberada(C,prox);
-  return `<div class="small muted" style="margin-bottom:.6rem"><a href="#/curso">Curso</a> › ${esc(a._bloco)} › Dia ${esc(a.dia)}</div>
+  return `<div class="small muted" style="margin-bottom:.6rem"><a href="#/curso">Curso</a> › ${esc(a._bloco)} › Aula ${esc(a.dia)}</div>
   <div class="card lesson-head">
     <div class="btn-row" style="gap:.4rem"><span class="tag tag-navy">${esc(a.disciplina)} · ${esc(d.nome)}</span>${feita?`<span class="tag tag-ok">✓ Concluída em ${fmtData(p.aulas[a.id].data)}</span>`:'<span class="tag">Liberada</span>'}</div>
     <h1 style="margin:.6rem 0 0">${esc(a.titulo)}</h1>
-    <div class="meta"><span>Data prevista: <b>${fmtData(a.data)}</b> (${diaSemana(a.data)})</span><span>Duração: <b>${esc(a.minutos)} min</b></span></div>
+    <div class="meta"><span>Aula <b>${esc(a.dia)}</b> do bloco ${esc(a._bloco)}</span><span>Duração: <b>${esc(a.minutos)} min</b></span></div>
     ${a.objetivo?`<div class="alert alert-info" style="margin:1rem 0 0"><b>Objetivo:</b> ${esc(a.objetivo)}</div>`:''}
     ${roteiro}
   </div>
@@ -1332,7 +1332,7 @@ function vCaderno(C){
   if(!g.length) h+=`<p class="muted">Ainda não há pontos de caderno. Eles aparecem quando as aulas são liberadas.</p>`;
   for(const x of g){
     const pts=soPendentes?x.pts.filter(p=>!p.ok):x.pts; if(!pts.length) continue;
-    h+=`<div style="margin-bottom:1.1rem"><div style="font-weight:600;color:var(--navy);margin-bottom:.3rem"><a href="#/aula/${encodeURIComponent(x.a.id)}" style="text-decoration:none">${esc(x.a.titulo)}</a> <span class="small muted">· Dia ${esc(x.a.dia)} · ${fmtData(x.a.data)}</span></div>
+    h+=`<div style="margin-bottom:1.1rem"><div style="font-weight:600;color:var(--navy);margin-bottom:.3rem"><a href="#/aula/${encodeURIComponent(x.a.id)}" style="text-decoration:none">${esc(x.a.titulo)}</a> <span class="small muted">· ${esc(x.a._bloco)} · Aula ${esc(x.a.dia)}</span></div>
       ${pts.map(p=>`<label class="check ${p.ok?'done-line':''}" style="padding:.3rem 0"><input type="checkbox" data-action="caderno" data-k="${esc(p.k)}" ${p.ok?'checked':''}><span>${esc(p.t)}</span></label>`).join('')}</div>`;
   }
   if(g.length && soPendentes && ok===tot) h+=`<div class="alert alert-ok">Tudo anotado! Nenhum ponto pendente.</div>`;
@@ -1344,7 +1344,7 @@ function vCaderno(C){
 async function imprimirCaderno(){
   const g=pontosCaderno(curso()).map(x=>({a:x.a, pts:x.pts.filter(p=>!p.ok)})).filter(x=>x.pts.length);
   $('#print-root').innerHTML=`<div class="print-cad"><h1>Caderno — pontos pendentes</h1><p>${esc(S.d.perfil.nome||contaAtual().usuario)} · impresso em ${fmtData(hojeISO())}</p>
-    ${g.map(x=>`<h3>${esc(x.a.titulo)} (Dia ${esc(x.a.dia)} · ${fmtData(x.a.data)})</h3>${x.pts.map(p=>`<div class="pt"><span class="box"></span><span>${esc(p.t)}</span></div>`).join('')}`).join('')}</div>`;
+    ${g.map(x=>`<h3>${esc(x.a.titulo)} (${esc(x.a._bloco)} · Aula ${esc(x.a.dia)})</h3>${x.pts.map(p=>`<div class="pt"><span class="box"></span><span>${esc(p.t)}</span></div>`).join('')}`).join('')}</div>`;
   imprimir('@page{size:A4 portrait;margin:15mm}');
 }
 function imprimir(pageCss){
@@ -1378,12 +1378,6 @@ function validarBloco(j){
   const bid=String(b.id||'').trim();
   if(!bid) erros.push('Bloco: falta o "id" (ex.: "B01").'); else if(!IDOK.test(bid)) erros.push(`Bloco: o id "${bid}" tem caracteres inválidos. Use letras, números, hífen ou ponto.`);
   const titulo=String(b.titulo||'').trim(); if(!titulo) avisos.push('Bloco: falta o "titulo". Usei o id como título.');
-  const di=parseISO(b.inicio), df=parseISO(b.fim);
-  if(!di) erros.push(`Bloco: data de início inválida ("${b.inicio??''}"). Use o formato AAAA-MM-DD.`);
-  if(!df) erros.push(`Bloco: data de fim inválida ("${b.fim??''}"). Use o formato AAAA-MM-DD.`);
-  if(di&&df&&df<di) erros.push('Bloco: a data de fim vem antes da data de início.');
-  if(di&&di.getDay()===0) avisos.push('Bloco: a data de início cai num domingo.');
-  if(df&&df.getDay()===0) avisos.push('Bloco: a data de fim cai num domingo.');
   if(erros.length) return {bloco:null, erros, avisos};
   // IDs de aulas já usados em OUTROS blocos
   const usados={}; for(const ob of Object.values(S.blocos)){ if(ob.bloco.id===bid) continue; ob.aulas.forEach(a=>usados[a.id]=ob.bloco.id); ob.listas.forEach(l=>usados['L:'+l.id]=ob.bloco.id); }
@@ -1394,14 +1388,11 @@ function validarBloco(j){
     if(!a||typeof a!=='object'){ erros.push(`${ref}: formato inválido. Aula ignorada.`); return; }
     const id=String(a.id||'').trim(), e=[];
     if(!id) e.push('falta o "id"'); else if(!IDOK.test(id)) e.push(`o id "${id}" tem caracteres inválidos`); else if(idsA.has(id)) e.push(`o id "${id}" está repetido`); else if(usados[id]) e.push(`o id "${id}" já é usado no bloco ${usados[id]}`);
-    const dia=Number(a.dia); if(!Number.isInteger(dia)||dia<1) e.push('o "dia" deve ser um número a partir de 1'); else if(dias.has(dia)) e.push(`o dia ${dia} está repetido`);
-    const dt=parseISO(a.data); if(!dt) e.push(`data inválida ("${a.data??''}"), use AAAA-MM-DD`); else if(dt.getDay()===0) e.push(`a data ${fmtData(a.data)} cai num domingo`);
+    const dia=Number(a.dia); if(!Number.isInteger(dia)||dia<1) e.push('o "dia" (número da aula) deve ser 1, 2, 3...'); else if(dias.has(dia)) e.push(`a aula número ${dia} está repetida`);
     const disc=String(a.disciplina||'').trim().toUpperCase(); if(!DISCIPLINAS[disc]) e.push(`disciplina "${a.disciplina??''}" não existe (use D01 a D12)`);
     const tit=String(a.titulo||'').trim(); if(!tit) e.push('falta o "titulo"');
     if(e.length){ erros.push(`${ref}: ${e.join('; ')}. Aula ignorada.`); return; }
     idsA.add(id); dias.add(dia);
-    if(dia>6) avisos.push(`${ref}: dia ${dia} — o padrão é de 1 a 6 por bloco.`);
-    if(dt<di||dt>df) avisos.push(`${ref}: a data ${fmtData(a.data)} fica fora do período do bloco.`);
     let min=Number(a.minutos); if(!(min>0)){ min=30; avisos.push(`${ref}: "minutos" ausente ou inválido. Usei 30.`); }
     const roteiro=(Array.isArray(a.roteiro)?a.roteiro:[]).filter(r=>r&&typeof r==='object').map(r=>({min:Number(r.min)||0, etapa:String(r.etapa||'')}));
     const somaR=roteiro.reduce((s,r)=>s+r.min,0); if(roteiro.length && somaR!==min) avisos.push(`${ref}: o roteiro soma ${somaR} min, mas a aula tem ${min} min.`);
@@ -1418,7 +1409,7 @@ function validarBloco(j){
       } else if(String(v.busca||'').trim()) video={busca:String(v.busca).trim().slice(0,200)};
       else avisos.push(`${ref}: "video" sem link e sem busca. Ignorado.`);
     }
-    aulas.push({id, dia, data:a.data, disciplina:disc, titulo:tit, objetivo:txt(a.objetivo), minutos:min, roteiro,
+    aulas.push({id, dia, disciplina:disc, titulo:tit, objetivo:txt(a.objetivo), minutos:min, roteiro,
       conteudo:txt(a.conteudo), exemplo:txt(a.exemplo), naPratica:txt(a.naPratica??a.na_pratica), armadilhas:txt(a.armadilhas),
       base_legal:(Array.isArray(a.base_legal)?a.base_legal:(a.base_legal?[a.base_legal]:[])).map(String).filter(s=>s.trim()),
       caderno:(Array.isArray(a.caderno)?a.caderno:(a.caderno?[a.caderno]:[])).map(String).filter(s=>s.trim()), video});
@@ -1468,7 +1459,7 @@ function validarBloco(j){
     listas.push({id, titulo:String(l.titulo||'').trim()||('Lista '+id), aulas:refs, minutos:min, questoes});
   });
   if(!listas.length) avisos.push('Este bloco não tem lista de exercícios válida.');
-  return {bloco:{bloco:{id:bid, titulo:titulo||bid, inicio:b.inicio, fim:b.fim}, aulas, listas, importadoEm:new Date().toISOString()}, erros, avisos};
+  return {bloco:{bloco:{id:bid, titulo:titulo||bid}, aulas, listas, importadoEm:new Date().toISOString()}, erros, avisos};
 }
 let ultimoResultado='';
 async function importar(texto, silencioso){
@@ -1495,7 +1486,7 @@ function vImportar(C){
     <div class="btn-row" style="margin-top:.8rem"><button class="btn btn-primary" data-action="importar">Validar e importar</button><button class="btn btn-ghost" data-action="limpar-imp">Limpar</button></div>
     <div id="imp-res" style="margin-top:1rem">${ultimoResultado}</div></div>
   <div class="card"><h3>Blocos importados</h3>${blocos.length?blocos.map(b=>`<div class="item"><span class="st ${blocoCompleto(b)?'st-done':'st-open'}">${blocoCompleto(b)?IC.check:IC.list}</span><div class="info"><div class="t">${esc(b.bloco.id)} · ${esc(b.bloco.titulo)}</div>
-      <div class="m"><span>${fmtData(b.bloco.inicio)} a ${fmtData(b.bloco.fim)}</span><span>${plural(b.aulas.length,'aula','aulas')} · ${plural(b.listas.length,'lista','listas')}</span><span>Importado em ${fmtData(b.importadoEm)}</span></div></div>
+      <div class="m"><span>${plural(b.aulas.length,'aula','aulas')} · ${plural(b.listas.length,'lista','listas')}</span><span>Importado em ${fmtData(b.importadoEm)}</span></div></div>
       <button class="btn btn-sm btn-danger" data-action="remover-bloco" data-id="${esc(b.bloco.id)}">Remover</button></div>`).join(''):'<p class="muted" style="margin:0">Nenhum bloco importado ainda.</p>'}</div>
   <div class="card"><div class="card-title"><h3>2. Prompt do professor de IA</h3><button class="btn btn-sm btn-gold" data-action="copiar-prompt">Copiar prompt</button></div>
     <p class="small muted" style="margin-top:-.3rem">Copie, cole numa IA (ChatGPT, Claude, Gemini…), ajuste o número do bloco e as datas no final e peça o bloco. Depois cole a resposta na caixa acima.</p>
@@ -1504,13 +1495,11 @@ function vImportar(C){
 }
 
 /* ---------- 16. BLOCO DE EXEMPLO E PROMPT ---------- */
-function proximasDatasUteis(n){ const out=[]; const d=new Date(); while(out.length<n){ if(d.getDay()!==0) out.push(toISO(d)); d.setDate(d.getDate()+1); } return out; }
 function blocoExemplo(){
-  const [d1,d2,d3]=proximasDatasUteis(3);
   return {
-    bloco:{id:'EX01', titulo:'Bloco de exemplo: primeiros passos', inicio:d1, fim:d3},
+    bloco:{id:'EX01', titulo:'Bloco de exemplo: primeiros passos'},
     aulas:[
-      {id:'EX-A1', dia:1, data:d1, disciplina:'D01', titulo:'O que é tributo e quais são as espécies', objetivo:'Entender o conceito legal de tributo e diferenciar impostos, taxas e contribuições.', minutos:30,
+      {id:'EX-A1', dia:1, disciplina:'D01', titulo:'O que é tributo e quais são as espécies', objetivo:'Entender o conceito legal de tributo e diferenciar impostos, taxas e contribuições.', minutos:30,
        roteiro:[{min:10,etapa:'Conceito'},{min:10,etapa:'Exemplo'},{min:10,etapa:'Prática'}],
        conteudo:'## Conceito de tributo\nPelo **CTN, art. 3º**, tributo é toda prestação em dinheiro, obrigatória, que **não é multa**, criada por lei e cobrada pela administração de forma vinculada (sem escolha do fiscal).\n\n## As espécies\n| Espécie | Ligada a uma ação do governo? | Exemplos |\n|---|---|---|\n| Imposto | Não | ICMS, IPI, IRPJ, ISS |\n| Taxa | Sim (serviço ou fiscalização) | Taxa de alvará |\n| Contribuição de melhoria | Sim (obra que valoriza o imóvel) | Asfalto na rua |\n| Contribuições especiais | Finalidade definida | PIS, COFINS, CSLL, INSS |\n| Empréstimo compulsório | Situações excepcionais | Calamidade, guerra |\n\n- O **imposto** não depende de nenhuma contraprestação do Estado.\n- A **taxa** existe porque o Estado presta um serviço ou exerce poder de polícia.\n- As **contribuições** têm destino definido, como a seguridade social.',
        exemplo:'Venda de mercadoria por **R$ 1.000,00** de uma empresa do Lucro Presumido:\n- ICMS 17%: 1.000 × 17% = **R$ 170,00**\n- PIS 0,65%: 1.000 × 0,65% = **R$ 6,50**\n- COFINS 3%: 1.000 × 3% = **R$ 30,00**\n\nTotal de tributos: 170 + 6,50 + 30 = **R$ 206,50** (20,65% do valor da venda).',
@@ -1519,7 +1508,7 @@ function blocoExemplo(){
        base_legal:['CTN (Lei 5.172/1966), arts. 3º, 5º, 16, 77 e 81','Constituição Federal, arts. 145, 148 e 149'],
        caderno:['Definição de tributo (CTN, art. 3º) com suas palavras','As 5 espécies de tributo e um exemplo de cada','Diferença entre imposto (sem contraprestação) e taxa (com contraprestação)'],
        video:{busca:'espécies de tributos impostos taxas contribuições CTN'}},
-      {id:'EX-A2', dia:2, data:d2, disciplina:'D01', titulo:'Documentos fiscais eletrônicos: NF-e, NFC-e, NFS-e e CT-e', objetivo:'Reconhecer cada documento fiscal eletrônico e ler a chave de acesso da NF-e.', minutos:30,
+      {id:'EX-A2', dia:2, disciplina:'D01', titulo:'Documentos fiscais eletrônicos: NF-e, NFC-e, NFS-e e CT-e', objetivo:'Reconhecer cada documento fiscal eletrônico e ler a chave de acesso da NF-e.', minutos:30,
        roteiro:[{min:10,etapa:'Tipos de documento'},{min:10,etapa:'Chave de acesso'},{min:10,etapa:'Conferência'}],
        conteudo:'## Principais documentos\n| Documento | Modelo | Para quê |\n|---|---|---|\n| NF-e | 55 | Venda e circulação de mercadorias entre empresas |\n| NFC-e | 65 | Venda no varejo ao consumidor final |\n| CT-e | 57 | Prestação de serviço de transporte |\n| NFS-e | — | Prestação de serviços (ISS, municipal) |\n\nO **DANFE** é só a impressão auxiliar da NF-e. O documento que vale é o **XML** autorizado.\n\n## Chave de acesso (44 dígitos)\n1. UF (2)\n2. Ano e mês de emissão (4)\n3. CNPJ do emitente (14)\n4. Modelo (2)\n5. Série (3)\n6. Número da nota (9)\n7. Tipo de emissão (1)\n8. Código numérico (8)\n9. Dígito verificador (1)',
        exemplo:'Chave fictícia: `42261112345678000190550010000012341123456787`\n- `42` = Santa Catarina\n- `2611` = novembro de 2026\n- `12345678000190` = CNPJ do emitente\n- `55` = NF-e\n- `001` = série 1\n- `000001234` = nota nº 1.234\n\nConta: 2 + 4 + 14 + 2 + 3 + 9 + 1 + 8 + 1 = **44** dígitos.',
@@ -1528,7 +1517,7 @@ function blocoExemplo(){
        base_legal:['Ajuste SINIEF 07/2005 (NF-e)','Ajuste SINIEF 19/2016 (NFC-e)','Ajuste SINIEF 09/2007 (CT-e)','LC 116/2003 (ISS)'],
        caderno:['Tabela: documento, modelo e uso','A ordem dos campos da chave de acesso de 44 dígitos','DANFE não é a nota: o que vale é o XML'],
        video:{busca:'chave de acesso NF-e 44 dígitos como ler'}},
-      {id:'EX-A3', dia:3, data:d3, disciplina:'D02', titulo:'CFOP: o código que conta a história da operação', objetivo:'Ler o CFOP e escolher o código certo na entrada, conforme a destinação da mercadoria.', minutos:30,
+      {id:'EX-A3', dia:3, disciplina:'D02', titulo:'CFOP: o código que conta a história da operação', objetivo:'Ler o CFOP e escolher o código certo na entrada, conforme a destinação da mercadoria.', minutos:30,
        roteiro:[{min:10,etapa:'Primeiro dígito'},{min:10,etapa:'Exemplo'},{min:10,etapa:'Prática'}],
        conteudo:'## O primeiro dígito\n| Entradas | Saídas | Origem/destino |\n|---|---|---|\n| 1 | 5 | Dentro do estado |\n| 2 | 6 | Outro estado |\n| 3 | 7 | Exterior |\n\n## Códigos frequentes\n- `5.102` / `6.102`: venda de mercadoria comprada de terceiros\n- `1.102` / `2.102`: compra para comercialização\n- `1.556` / `2.556`: compra de material de uso e consumo\n- `5.949`: outra saída não especificada\n\nO CFOP de **entrada** depende do que a empresa compradora vai fazer com a mercadoria, e não só do CFOP do fornecedor.',
        exemplo:'Empresa de SC compra **R$ 2.000,00** em mercadoria para revenda de um fornecedor do PR.\n- CFOP de entrada: **2.102** (outro estado, para comercialização)\n- Alíquota interestadual PR → SC: 12%\n- ICMS destacado: 2.000 × 12% = **R$ 240,00** (crédito, se a empresa for do regime normal)',
@@ -1548,8 +1537,8 @@ function blocoExemplo(){
   };
 }
 const FORMATO = `{
- "bloco": {"id":"B01","titulo":"...","inicio":"AAAA-MM-DD","fim":"AAAA-MM-DD"},
- "aulas":[{"id":"A001","dia":1,"data":"AAAA-MM-DD","disciplina":"D01","titulo":"","objetivo":"","minutos":30,
+ "bloco": {"id":"B01","titulo":"..."},
+ "aulas":[{"id":"A001","dia":1,"disciplina":"D01","titulo":"","objetivo":"","minutos":30,
    "roteiro":[{"min":10,"etapa":""}],"conteudo":"","exemplo":"","naPratica":"","armadilhas":"",
    "base_legal":[""],"caderno":[""],"video":null}],
  "listas":[{"id":"L01","titulo":"","aulas":["A001"],"minutos":30,"questoes":[
@@ -1563,7 +1552,7 @@ const PROMPT = `Você é meu professor particular de Contabilidade Fiscal e Trib
 SOBRE MIM
 - Sou auxiliar fiscal em escritório de contabilidade e quero evoluir para assistente e depois analista fiscal.
 - Trabalho com empresas do Lucro Presumido e do Lucro Real, e algumas do Simples Nacional.
-- Estudo 30 minutos por dia, de segunda a sábado (nunca domingo).
+- Estudo cerca de 30 minutos por aula, no meu próprio ritmo (sem datas fixas).
 
 O CURSO
 Disciplinas (use só estes códigos):
@@ -1580,14 +1569,14 @@ D10 Simples Nacional
 D11 Reforma Tributária
 D12 Rotina de Fechamento, Atendimento e Revisão Geral
 
-Cada BLOCO tem 6 aulas (dia 1 a 6, uma por dia, de segunda a sábado, 30 minutos cada) e 1 lista de exercícios.
+Cada BLOCO tem 6 aulas ("dia" 1 a 6 = número da aula dentro do bloco, cerca de 30 minutos cada) e 1 lista de exercícios. Não use datas.
 
 COMO GERAR CADA BLOCO
 1. Responda SOMENTE com um JSON válido, sem texto antes ou depois, neste formato:
 ${FORMATO}
 
 2. Regras:
-- Datas no formato AAAA-MM-DD. Nenhuma data pode cair num domingo.
+- NÃO inclua datas (nada de "data", "inicio" ou "fim"): o aluno estuda no próprio ritmo.
 - Ids: bloco "B01", "B02"...; aulas numeradas em sequência no curso inteiro ("A001", "A002"... continuando de um bloco para o outro); listas "L01", "L02"...
 - "roteiro" deve somar 30 minutos (ex.: 10 min conceito, 10 min exemplo, 10 min prática).
 - "conteudo", "exemplo", "naPratica" e "armadilhas" aceitam formatação simples: ## títulos, listas com "-", **negrito**, \`código\` e tabelas com |. Linguagem simples e direta.
@@ -1600,7 +1589,7 @@ ${FORMATO}
 - Considere a legislação atual, incluindo a Reforma Tributária (EC 132/2023 e LC 214/2025: CBS, IBS e o período de transição).
 - Siga uma sequência lógica entre os blocos, do básico ao avançado, e revise pontos anteriores quando fizer sentido.
 
-AGORA GERE: o bloco [B01], com início em [AAAA-MM-DD] (segunda-feira) e fim em [AAAA-MM-DD] (sábado), continuando a partir de: [último assunto estudado ou "início do curso"].`;
+AGORA GERE: o bloco [B01], continuando a partir de: [último assunto estudado ou "início do curso"].`;
 
 /* ---------- 17. CERTIFICADO ---------- */
 // Textos do certificado: nome do curso, subtítulo e instituição vêm do administrador; CPF e 2ª página são escolha de cada aluno

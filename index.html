@@ -546,6 +546,51 @@ details.caixa summary{cursor:pointer;font-weight:600;color:var(--navy);padding:.
 .balao::before,.balao::after{content:"";position:absolute;left:10px;top:100%;border:8px solid transparent;border-top-color:var(--navy);border-left-width:4px}
 .balao::after{left:12px;top:calc(100% - 2px);border-width:6px;border-left-width:3px;border-top-color:#fff}
 @media (max-width:480px){.balao{left:70%;white-space:normal;width:150px}}
+
+/* ===== Pomodoro ===== */
+.pomo{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:1.25rem;align-items:start}
+@media (max-width:900px){.pomo{grid-template-columns:1fr}}
+.pomo-timer{text-align:center;padding:1.6rem 1.2rem}
+.pomo-fase{display:inline-block;font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;padding:.35rem .8rem;border-radius:999px;background:var(--gold-soft);color:#7a5a12;transition:background .3s,color .3s}
+.pomo[data-fase=curta] .pomo-fase,.pomo[data-fase=longa] .pomo-fase{background:#e3f6ec;color:#17794a}
+.pomo[data-fase=fim] .pomo-fase{background:#e7edfb;color:var(--navy)}
+.pomo-anel{position:relative;width:min(300px,76vw);aspect-ratio:1;margin:1.1rem auto}
+.pomo-anel svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pomo-anel circle{fill:none;stroke-width:9;stroke-linecap:round}
+.pomo-anel .trilho{stroke:#e8ecf5}
+.pomo-anel .prog{stroke:var(--gold);transition:stroke-dashoffset .35s linear,stroke .3s}
+.pomo[data-fase=curta] .prog,.pomo[data-fase=longa] .prog{stroke:#22a36a}
+.pomo[data-rodando="1"] .pomo-anel{animation:pomoRespira 3s ease-in-out infinite}
+@keyframes pomoRespira{50%{transform:scale(1.015)}}
+.pomo-tempo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pomo-tempo b{font:800 clamp(2.6rem,9vw,3.6rem)/1 Georgia,serif;color:var(--navy);font-variant-numeric:tabular-nums}
+.pomo-tempo span{color:var(--muted);font-size:.85rem;margin-top:.35rem}
+.pomo-pontos{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin:.2rem 0 1rem}
+.pomo-pontos i{width:11px;height:11px;border-radius:50%;background:#dfe5f2;transition:background .3s,transform .3s}
+.pomo-pontos i.ok{background:var(--gold)}
+.pomo-pontos i.at{background:var(--navy);transform:scale(1.35)}
+.pomo-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.pomo-btns .btn{min-width:110px}
+.pomo-hoje{margin-top:1rem;color:var(--muted);font-size:.85rem}
+.pomo-grade{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.pomo-grade .field{margin:0}
+.pomo-grade small{color:var(--muted);font-weight:500}
+/* menu suspenso de modelos: abre ao passar o mouse/tocar e fecha ao tirar o mouse */
+.pomo-dd{position:relative;margin-bottom:1rem}
+.pomo-dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:.6rem;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:.7rem .9rem;cursor:pointer;font-weight:700;color:var(--navy);transition:border-color .15s,box-shadow .15s}
+.pomo-dd-btn:hover,.pomo-dd.aberto .pomo-dd-btn{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,74,.15)}
+.pomo-dd-btn small{display:block;font-weight:500;color:var(--muted);font-size:.8rem;margin-top:2px}
+.pomo-dd-btn .seta{transition:transform .25s}
+.pomo-dd.aberto .seta{transform:rotate(180deg)}
+.pomo-dd-lista{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(11,31,77,.2);padding:.35rem;max-height:min(420px,60vh);overflow:auto;opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top;pointer-events:none;transition:opacity .18s,transform .22s cubic-bezier(.2,.8,.2,1)}
+.pomo-dd.aberto .pomo-dd-lista{opacity:1;transform:none;pointer-events:auto}
+.pomo-dd-lista.acima{top:auto;bottom:calc(100% + 4px);transform-origin:bottom}
+.pomo-op{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:10px;padding:.6rem .75rem;cursor:pointer;color:var(--text)}
+.pomo-op:hover,.pomo-op.sel{background:#f1f4fa}
+.pomo-op b{display:flex;justify-content:space-between;gap:.5rem;color:var(--navy);font-size:.95rem}
+.pomo-op b em{font-style:normal;font-weight:600;color:#7a5a12;font-size:.8rem;white-space:nowrap}
+.pomo-op span{display:block;color:var(--muted);font-size:.82rem;margin-top:.15rem;line-height:1.35}
+.nav a .pomo-badge{margin-left:auto;font:700 .72rem/1 system-ui;background:var(--gold);color:#2a1f05;padding:.25rem .45rem;border-radius:999px;font-variant-numeric:tabular-nums}
 /* ===== Animações UX v2 ===== */
 /* Cortina de entrada (revela o sistema depois do login) */
 .cortina{position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,var(--navy),#071433);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;clip-path:inset(0 0 0 0 round 0);animation:cortinaSobe .9s cubic-bezier(.76,0,.24,1) .75s forwards;pointer-events:none}
@@ -718,6 +763,7 @@ const ICM = {
   lupa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>'
 };
 const IC = {
+  pomo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M9 2.5h6"/><path d="M12 2.5V5"/></svg>',
   painel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   curso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7l10-4 10 4-10 4-10-4z"/><path d="M6 9v5c0 1.7 2.7 3 6 3s6-1.3 6-3V9"/></svg>',
   exerc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>',
@@ -1177,7 +1223,7 @@ function temProgresso(){ const p=P(); return Object.keys(p.aulas).length>0 || Ob
 
 /* ---------- 8. ROTEAMENTO E ESTRUTURA ---------- */
 const MENU = [
-  ['painel','Painel',IC.painel],['curso','Curso',IC.curso],['exercicios','Exercícios',IC.exerc],['caderno','Caderno',IC.caderno],
+  ['painel','Painel',IC.painel],['curso','Curso',IC.curso],['exercicios','Exercícios',IC.exerc],['caderno','Caderno',IC.caderno],['pomodoro','Pomodoro',IC.pomo],
   ['importar','Importar conteúdo',IC.importar],['certificado','Certificado',IC.cert],['perfil','Perfil e backup',IC.perfil]
 ];
 function rota(){ const h=(location.hash||'#/painel').replace(/^#\/?/,'').split('/'); return {pag:h[0]||'painel', id:decodeURIComponent(h[1]||'')}; }
@@ -1272,6 +1318,115 @@ function orbitaLogin(){
     requestAnimationFrame(quadro);
   })(t0);
 }
+
+/* ---------- POMODORO ---------- */
+const POMO_MODELOS = [
+  {id:'classico', nome:'Clássico', foco:25, curta:5, longa:15, cada:4, total:4, desc:'O método original: 25 min de foco, 5 de pausa e uma pausa maior a cada 4 sessões. Bom para começar.'},
+  {id:'fiscal', nome:'Estudo fiscal (30 min)', foco:30, curta:5, longa:15, cada:2, total:2, desc:'Pensado na sua meta de 30 minutos por dia: duas sessões de 30 min com pausa de 5 no meio.'},
+  {id:'leve', nome:'Leve / iniciante', foco:15, curta:3, longa:10, cada:4, total:4, desc:'Sessões curtas para dias corridos ou quando está difícil começar. Pouco esforço, constância.'},
+  {id:'profundo', nome:'Foco profundo', foco:50, curta:10, longa:30, cada:3, total:3, desc:'Blocos longos para assuntos difíceis (apuração, cálculos, SPED). Pausa de 10 minutos para descansar de verdade.'},
+  {id:'maratona', nome:'Maratona', foco:90, curta:20, longa:30, cada:2, total:4, desc:'Ciclos de 90 min, o ritmo natural de concentração do corpo. Para dias de estudo longo ou revisão geral.'},
+  {id:'revisao', nome:'Revisão relâmpago', foco:10, curta:2, longa:5, cada:5, total:5, desc:'Rodadas de 10 minutos para revisar anotações, listas e o manual. Rápido e sem cansar.'},
+  {id:'custom', nome:'Personalizado', foco:25, curta:5, longa:15, cada:4, total:4, desc:'Ajuste cada número do seu jeito nos campos ao lado.'}
+];
+const KPOMO='cursoFiscal.pomodoro';
+const POMO = (function(){
+  const pad=n=>String(n).padStart(2,'0'), hoje=()=>new Date().toISOString().slice(0,10);
+  const base=()=>({cfg:{foco:25,curta:5,longa:15,cada:4,total:4,auto:true,som:true},modelo:'classico',fase:'foco',n:1,rodando:false,fimEm:0,rest:25*60000,dia:{d:hoje(),min:0,sess:0}});
+  let st; try{ st=Object.assign(base(),JSON.parse(localStorage.getItem(KPOMO)||'{}')); st.cfg=Object.assign(base().cfg,st.cfg); }catch(e){ st=base(); }
+  if(st.dia.d!==hoje()) st.dia={d:hoje(),min:0,sess:0};
+  let ctx=null, timer=null;
+  const salvarP=()=>{ try{ localStorage.setItem(KPOMO,JSON.stringify(st)); }catch(e){} };
+  const dur=f=>({foco:st.cfg.foco,curta:st.cfg.curta,longa:st.cfg.longa}[f]||0)*60000;
+  const rotulo={foco:'Foco',curta:'Pausa curta',longa:'Pausa longa',fim:'Concluído'};
+  function bip(){ if(!st.cfg.som) return; try{ ctx=ctx||new (window.AudioContext||window.webkitAudioContext)(); [0,.22,.44].forEach((t,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=i===2?988:784; o.connect(g); g.connect(ctx.destination); const a=ctx.currentTime+t; g.gain.setValueAtTime(0,a); g.gain.linearRampToValueAtTime(.25,a+.02); g.gain.exponentialRampToValueAtTime(.001,a+.2); o.start(a); o.stop(a+.22); }); }catch(e){} }
+  function proxima(){          // define a fase seguinte ao terminar a atual
+    if(st.fase==='foco'){ st.dia.min+=st.cfg.foco; st.dia.sess+=1;
+      if(st.n>=st.cfg.total){ st.fase='fim'; st.rest=0; return; }
+      st.fase = (st.n % Math.max(1,st.cfg.cada)===0) ? 'longa' : 'curta';
+    } else { st.fase='foco'; st.n+=1; }
+    st.rest=dur(st.fase);
+  }
+  function terminou(){
+    const era=st.fase; proxima(); bip();
+    if(typeof toast==='function') toast(st.fase==='fim'?'Pomodoro concluído! Bom trabalho.':era==='foco'?'Sessão de foco concluída. Hora da pausa!':'Pausa terminou. Vamos voltar ao foco!','ok');
+    if(st.fase!=='fim' && st.cfg.auto){ st.rodando=true; st.fimEm=Date.now()+st.rest; } else { st.rodando=false; }
+    salvarP();
+  }
+  function restante(){ return st.rodando?Math.max(0,st.fimEm-Date.now()):st.rest; }
+  function fmt(ms){ const t=Math.ceil(ms/1000); return pad(Math.floor(t/60))+':'+pad(t%60); }
+  function pintar(){
+    const r=restante(), tot=dur(st.fase)||1, el=document.getElementById('pomo');
+    const pr=document.querySelector('#pomo .prog'); if(pr){ const C=2*Math.PI*45; pr.style.strokeDasharray=C; pr.style.strokeDashoffset=C*(st.fase==='fim'?0:(1-r/tot)); }
+    const t=document.getElementById('pomo-t'); if(t) t.textContent=st.fase==='fim'?'00:00':fmt(r);
+    if(el){ el.dataset.fase=st.fase; el.dataset.rodando=st.rodando?'1':'0'; const f=el.querySelector('.pomo-fase'); if(f) f.textContent=rotulo[st.fase]; const sub=document.getElementById('pomo-sub'); if(sub) sub.textContent=st.fase==='fim'?'Todas as sessões feitas':`Sessão ${st.n} de ${st.cfg.total}`;
+      const b=document.getElementById('pomo-go'); if(b) b.textContent=st.fase==='fim'?'Recomeçar':st.rodando?'Pausar':(st.rest<dur(st.fase)?'Continuar':'Iniciar');
+      const pt=document.getElementById('pomo-pontos'); if(pt) pt.innerHTML=Array.from({length:Math.min(st.cfg.total,24)},(_,i)=>`<i class="${i+1<st.n||st.fase==='fim'?'ok':i+1===st.n?'at':''}"></i>`).join('');
+      const h=document.getElementById('pomo-hoje'); if(h) h.textContent=`Hoje: ${st.dia.sess} ${st.dia.sess===1?'sessão':'sessões'} · ${st.dia.min} min de foco`; }
+    document.title = st.rodando ? `${fmt(r)} · ${rotulo[st.fase]} · Curso Fiscal do Narça` : 'Curso Fiscal do Narça';
+    const a=document.querySelector('#nav a[href="#/pomodoro"]'); if(a){ let bd=a.querySelector('.pomo-badge'); if(st.rodando){ if(!bd){ bd=document.createElement('span'); bd.className='pomo-badge'; a.appendChild(bd);} bd.textContent=fmt(r); } else if(bd) bd.remove(); }
+  }
+  function tick(){ if(st.rodando && Date.now()>=st.fimEm) terminou(); pintar(); }
+  function liga(){ if(!timer) timer=setInterval(tick,250); }
+  return {
+    st, pintar, modelos:POMO_MODELOS,
+    alternar(){ try{ ctx=ctx||new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+      if(st.fase==='fim'){ st.fase='foco'; st.n=1; st.rest=dur('foco'); }
+      if(st.rodando){ st.rest=Math.max(0,st.fimEm-Date.now()); st.rodando=false; }
+      else { if(st.rest<=0) st.rest=dur(st.fase); st.rodando=true; st.fimEm=Date.now()+st.rest; }
+      salvarP(); pintar(); },
+    pular(){ if(st.fase==='fim') return; const ra=st.rodando; st.rodando=false; if(st.fase==='foco'){ proxima(); } else { proxima(); } if(st.fase!=='fim'&&ra){ st.rodando=true; st.fimEm=Date.now()+st.rest; } salvarP(); pintar(); },
+    zerar(){ st.fase='foco'; st.n=1; st.rodando=false; st.rest=dur('foco'); salvarP(); pintar(); },
+    modelo(id){ const m=POMO_MODELOS.find(x=>x.id===id); if(!m) return; st.modelo=id; if(id!=='custom') Object.assign(st.cfg,{foco:m.foco,curta:m.curta,longa:m.longa,cada:m.cada,total:m.total}); this.zerar(); },
+    campo(k,v){ if(k==='auto'||k==='som'){ st.cfg[k]=!!v; } else { v=Math.max(k==='total'||k==='cada'?1:1, Math.min(k==='total'?99:k==='cada'?99:600, Math.round(+v)||1)); st.cfg[k]=v; st.modelo='custom'; }
+      if(!st.rodando && st.fase!=='fim' && k!=='auto' && k!=='som'){ st.rest=dur(st.fase); if(st.n>st.cfg.total) st.n=st.cfg.total; }
+      salvarP(); pintar(); },
+    liga
+  };
+})();
+POMO.liga(); POMO.pintar();
+function vPomodoro(){
+  const st=POMO.st, c=st.cfg, atual=POMO.modelos.find(m=>m.id===st.modelo)||POMO.modelos[0];
+  const campo=(k,rot,ajuda,max)=>`<div class="field"><label for="pp-${k}">${rot}${ajuda?` <small>${ajuda}</small>`:''}</label><input class="input pomo-in" id="pp-${k}" data-k="${k}" type="number" inputmode="numeric" min="1" max="${max||600}" value="${c[k]}"></div>`;
+  return `<div class="page-head"><h1>Pomodoro</h1><p>Estude em blocos de foco com pausas. Escolha um modelo ou monte o seu.</p></div>
+  <div class="pomo" id="pomo" data-fase="${st.fase}" data-rodando="${st.rodando?1:0}">
+    <div class="card pomo-timer">
+      <span class="pomo-fase">${({foco:'Foco',curta:'Pausa curta',longa:'Pausa longa',fim:'Concluído'})[st.fase]}</span>
+      <div class="pomo-anel"><svg viewBox="0 0 100 100"><circle class="trilho" cx="50" cy="50" r="45"/><circle class="prog" cx="50" cy="50" r="45"/></svg>
+        <div class="pomo-tempo"><b id="pomo-t">00:00</b><span id="pomo-sub"></span></div></div>
+      <div class="pomo-pontos" id="pomo-pontos"></div>
+      <div class="pomo-btns"><button class="btn btn-primary" id="pomo-go" data-pomo="go">Iniciar</button><button class="btn" data-pomo="pular">Pular</button><button class="btn" data-pomo="zerar">Reiniciar</button></div>
+      <div class="pomo-hoje" id="pomo-hoje"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Modelo</h3>
+      <div class="pomo-dd" id="pomo-dd">
+        <button type="button" class="pomo-dd-btn" data-pomo="dd" aria-haspopup="listbox"><span><span id="pomo-dd-nome">${esc(atual.nome)}</span><small id="pomo-dd-desc">${esc(atual.desc)}</small></span><svg class="seta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="pomo-dd-lista" role="listbox">${POMO.modelos.map(m=>`<button type="button" class="pomo-op ${m.id===st.modelo?'sel':''}" role="option" data-pomo="modelo" data-id="${m.id}"><b>${esc(m.nome)}<em>${m.id==='custom'?'você define':`${m.foco} / ${m.curta} min · ${m.total}×`}</em></b><span>${esc(m.desc)}</span></button>`).join('')}</div>
+      </div>
+      <div class="pomo-grade">
+        ${campo('foco','Foco','(min)')}${campo('curta','Pausa curta','(min)')}
+        ${campo('longa','Pausa longa','(min)')}${campo('cada','Pausa longa a cada','(sessões)',99)}
+        ${campo('total','Total de sessões','',99)}
+        <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;gap:.4rem"><label class="check"><input type="checkbox" class="pomo-in" data-k="auto" ${c.auto?'checked':''}> Iniciar a próxima etapa sozinho</label><label class="check"><input type="checkbox" class="pomo-in" data-k="som" ${c.som?'checked':''}> Tocar som ao terminar</label></div>
+      </div>
+      <p class="hint" style="margin-top:.8rem">O cronômetro continua rodando se você trocar de página. O tempo aparece no menu ao lado e na aba do navegador.</p>
+    </div>
+  </div>`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('[data-pomo]'); const dd=document.getElementById('pomo-dd');
+  if(!b){ if(dd&&!dd.contains(e.target)) dd.classList.remove('aberto'); return; }
+  const a=b.dataset.pomo;
+  if(a==='go') POMO.alternar(); else if(a==='pular') POMO.pular(); else if(a==='zerar') POMO.zerar();
+  else if(a==='dd'){ dd.classList.toggle('aberto'); abrirDD(dd); }
+  else if(a==='modelo'){ POMO.modelo(b.dataset.id); dd.classList.remove('aberto'); const m=POMO.modelos.find(x=>x.id===b.dataset.id); $('#pomo-dd-nome').textContent=m.nome; $('#pomo-dd-desc').textContent=m.desc; $$('.pomo-op',dd).forEach(o=>o.classList.toggle('sel',o===b)); ['foco','curta','longa','cada','total'].forEach(k=>{ const i=$('#pp-'+k); if(i) i.value=POMO.st.cfg[k]; }); }
+});
+function abrirDD(dd){ const l=$('.pomo-dd-lista',dd); if(!l) return; l.classList.remove('acima'); const r=dd.getBoundingClientRect(), h=Math.min(l.scrollHeight,Math.min(420,innerHeight*.6)); if(r.bottom+h+8>innerHeight && r.top>h) l.classList.add('acima'); }
+document.addEventListener('mouseover',e=>{ const dd=document.getElementById('pomo-dd'); if(dd&&dd.contains(e.target)&&matchMedia('(hover:hover)').matches&&!dd.classList.contains('aberto')){ dd.classList.add('aberto'); abrirDD(dd); } });
+document.addEventListener('mouseout',e=>{ const dd=document.getElementById('pomo-dd'); if(dd&&dd.classList.contains('aberto')&&dd.contains(e.target)&&!dd.contains(e.relatedTarget)) dd.classList.remove('aberto'); });
+document.addEventListener('input',e=>{ const i=e.target; if(!i.classList||!i.classList.contains('pomo-in')) return; POMO.campo(i.dataset.k, i.type==='checkbox'?i.checked:i.value); if(i.type!=='checkbox'){ const m=POMO.modelos.find(x=>x.id==='custom'); $('#pomo-dd-nome').textContent=m.nome; $('#pomo-dd-desc').textContent=m.desc; $$('.pomo-op').forEach(o=>o.classList.toggle('sel',o.dataset.id==='custom')); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ const dd=document.getElementById('pomo-dd'); if(dd) dd.classList.remove('aberto'); } });
 function render(){
   if(!S.user){ mostrarLogin(); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
@@ -1288,7 +1443,7 @@ function render(){
   const ba=blocoAtual(C);
   $('#top-block').textContent = ba ? `${ba.bloco.id} · ${ba.bloco.titulo}` : 'Nenhum bloco importado';
   $('#top-pct').textContent = st.pct+'%'; $('#top-bar').style.width = st.pct+'%';
-  const views={manual:(C,st,id)=>id?vSecao(C,st,id):vManual(), artigo:vArtigo, tabela:vTabela, painel:vPainel, curso:vCurso, aula:vAula, exercicios:vExercicios, lista:vLista, caderno:vCaderno, importar:vImportar, certificado:vCertificado, perfil:vPerfil};
+  const views={manual:(C,st,id)=>id?vSecao(C,st,id):vManual(), artigo:vArtigo, tabela:vTabela, painel:vPainel, curso:vCurso, aula:vAula, exercicios:vExercicios, lista:vLista, caderno:vCaderno, pomodoro:vPomodoro, importar:vImportar, certificado:vCertificado, perfil:vPerfil};
   if(r.pag==='importar' && !S.admin){ location.replace('#/painel'); return; }
   const v = views[r.pag] || vPainel;
   const view=$('#view'); view.innerHTML = v(C, st, r.id);
@@ -1296,7 +1451,7 @@ function render(){
   const ativoB = ['manual','artigo','tabela'].includes(r.pag) ? 'manual' : ativo;
   $('#bottom-nav').innerHTML = [['painel','Início',IC.painel],['curso','Curso',IC.curso],['exercicios','Exercícios',IC.exerc], manualLiberado()?['manual','Manual',ICM.livro]:['caderno','Caderno',IC.caderno],['perfil','Perfil',IC.perfil]]
     .map(([k,n,ic])=>`<a href="#/${k}" class="${ativoB===k?'active':''}">${ic}<span>${n}</span></a>`).join('');
-  contarNumeros(); animarView();
+  contarNumeros(); animarView(); if(r.pag==='pomodoro') POMO.pintar(); else POMO.pintar();
   if(r.pag==='certificado') posCertificado(C, st);
 }
 const contaAtual = () => ({usuario:S.email});

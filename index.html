@@ -687,7 +687,7 @@ details.caixa summary{cursor:pointer;font-weight:600;color:var(--navy);padding:.
 <div id="app" class="hidden">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="brand-logo"></div>
+      <div class="brand-logo" role="link" tabindex="0" aria-label="Ir para o painel inicial" title="Ir para o painel inicial"></div>
       <div><div class="brand-name">Curso Fiscal do Narça</div></div>
     </div>
     <nav class="nav" id="nav"></nav>
@@ -1533,6 +1533,55 @@ async function prepararPosLogin(ld){
     caixa.remove();
   }catch(e){}
 }
+
+/* ---------- Clique no rosto do menu: volta ao painel (avisa se houver algo não salvo) ---------- */
+const PEND={edit:false,perfil:false,hash:''};
+document.addEventListener('input',e=>{ const t=e.target; if(!t||!t.closest) return;
+  if(t.closest('#f-edit')){ PEND.edit=true; PEND.hash=location.hash; }
+  else if(t.closest('#f-perfil')){ PEND.perfil=true; PEND.hash=location.hash; } });
+function pendenciaAtual(){
+  const h=location.hash;
+  if($('#f-edit') && PEND.edit && PEND.hash===h) return {tipo:'edit', msg:'Você está editando um conteúdo do manual e ainda não salvou as alterações.', salvar:'Salvar e ir ao painel'};
+  if($('#f-perfil') && PEND.perfil && PEND.hash===h) return {tipo:'perfil', msg:'Você alterou seus dados pessoais e ainda não salvou.', salvar:'Salvar e ir ao painel'};
+  if(h.startsWith('#/lista') && S.tentativa && !S.tentativa.corrigida && Object.values(S.tentativa.respostas||{}).some(v=>String(v||'').trim()!=='')) return {tipo:'lista', msg:'Você respondeu questões desta lista e ainda não corrigiu. As respostas ainda não foram salvas.', salvar:'Corrigir, salvar e ir ao painel'};
+  const imp=$('#imp-txt'); if(imp && imp.value.trim()) return {tipo:'imp', msg:'Há conteúdo colado na tela de importação que ainda não foi importado.', salvar:'Importar e ir ao painel'};
+  return null;
+}
+function perguntarSaida(pend){
+  return new Promise(res=>{
+    const bg=document.createElement('div'); bg.className='modal-bg';
+    bg.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><h3>Há algo sem salvar</h3><p>${esc(pend.msg)}</p><p class="muted small" style="margin-top:-.4rem">O que você prefere fazer?</p>
+      <div class="btn-row" style="flex-wrap:wrap"><button class="btn" data-r="ficar">Continuar aqui</button><button class="btn btn-danger" data-r="sair">Sair sem salvar</button><button class="btn btn-primary" data-r="salvar">${esc(pend.salvar)}</button></div></div>`;
+    document.body.appendChild(bg);
+    const f=v=>{ bg.remove(); document.removeEventListener('keydown',k); res(v); };
+    const k=e=>{ if(e.key==='Escape') f('ficar'); };
+    document.addEventListener('keydown',k);
+    bg.addEventListener('click',e=>{ const b=e.target.closest('[data-r]'); if(b) f(b.dataset.r); else if(e.target===bg) f('ficar'); });
+    setTimeout(()=>{ const b=bg.querySelector('[data-r=salvar]'); b&&b.focus(); },30);
+  });
+}
+async function salvarPendencia(pend){
+  const h0=location.hash;
+  if(pend.tipo==='edit'){ const f=$('#f-edit'); f.requestSubmit(); for(let i=0;i<40&&location.hash===h0&&$('#f-edit');i++) await new Promise(r=>setTimeout(r,100)); return !$('#f-edit')||location.hash!==h0; }
+  if(pend.tipo==='perfil'){ const f=$('#f-perfil'); f.requestSubmit(); await new Promise(r=>setTimeout(r,150)); return !(PEND.perfil&&$('#p-cpf')&&$('#p-cpf').classList.contains('invalid')); }
+  if(pend.tipo==='lista'){ await corrigirLista(); return true; }
+  if(pend.tipo==='imp'){ const b=$('[data-action=importar]'); b&&b.click(); await new Promise(r=>setTimeout(r,600)); return true; }
+  return true;
+}
+async function irAoPainel(){
+  document.body.classList.remove('menu-open');
+  const pend=pendenciaAtual();
+  if(pend){
+    const r=await perguntarSaida(pend);
+    if(r==='ficar') return;
+    if(r==='salvar'){ const ok=await salvarPendencia(pend); if(!ok){ toast('Não consegui salvar. Confira os campos e tente de novo.','err'); return; } }
+    PEND.edit=PEND.perfil=false;
+    if(r==='sair' && pend.tipo==='lista') S.tentativa=null;
+  }
+  ir('#/painel'); window.scrollTo({top:0,behavior:'smooth'});
+}
+document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('.sidebar .brand-logo')){ e.preventDefault(); irAoPainel(); } });
+document.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.sidebar .brand-logo')){ e.preventDefault(); irAoPainel(); } });
 function render(){
   if(!S.user){ mostrarLogin(); return; }
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
@@ -1553,6 +1602,7 @@ function render(){
   if(r.pag==='importar' && !S.admin){ location.replace('#/painel'); return; }
   const v = views[r.pag] || vPainel;
   const view=$('#view'); view.innerHTML = v(C, st, r.id);
+  if(!$('#f-edit')) PEND.edit=false; if(PEND.hash!==location.hash) PEND.perfil=false;
   if(S._ultimaPag!==location.hash){ view.classList.remove('anim'); void view.offsetWidth; view.classList.add('anim'); S._ultimaPag=location.hash; } else view.classList.remove('anim');
   const ativoB = ['manual','artigo','tabela'].includes(r.pag) ? 'manual' : ativo;
   $('#bottom-nav').innerHTML = [['painel','Início',IC.painel],['curso','Curso',IC.curso],['exercicios','Exercícios',IC.exerc], manualLiberado()?['manual','Manual',ICM.livro]:['caderno','Caderno',IC.caderno],['perfil','Perfil',IC.perfil]]
@@ -2358,7 +2408,7 @@ async function salvarPerfil(e){
   const cpf=$('#p-cpf').value.replace(/\D/g,''), nome=$('#p-nome').value.trim().replace(/\s+/g,' '), nasc=$('#p-nasc').value;
   if(cpf && !cpfValido(cpf)){ recusar($('#p-cpf')); $('#cpf-msg').innerHTML='<div class="error-text">CPF inválido. Confira os números.</div>'; return; }
   if(nasc){ const d=parseISO(nasc); if(!d||d>new Date()||d.getFullYear()<1900) return toast('Data de nascimento inválida.','err'); }
-  Object.assign(S.d.perfil,{nome, cpf, nascimento:nasc, cidade:$('#p-cid').value.trim(), uf:$('#p-uf').value});
+  PEND.perfil=false; Object.assign(S.d.perfil,{nome, cpf, nascimento:nasc, cidade:$('#p-cid').value.trim(), uf:$('#p-uf').value});
   salvar(); toast('Dados salvos.','ok'); render();
 }
 async function trocarSenha(e){
